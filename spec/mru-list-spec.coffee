@@ -6,37 +6,37 @@ describe 'MRU List', ->
   workspaceElement = null
 
   beforeEach ->
-    workspaceElement = atom.workspace.getElement()
+    workspaceElement = soldat.workspace.getElement()
 
     waitsForPromise ->
-      atom.workspace.open('sample.js')
+      soldat.workspace.open('sample.js')
 
     waitsForPromise ->
-      atom.packages.activatePackage("tabs")
+      soldat.packages.activatePackage("tabs")
 
   describe ".activate()", ->
-    initialPaneCount = atom.workspace.getPanes().length
+    initialPaneCount = soldat.workspace.getPanes().length
 
     it "has exactly one modal panel per pane", ->
       expect(workspaceElement.querySelectorAll('.tabs-mru-switcher').length).toBe initialPaneCount
 
-      pane = atom.workspace.getActivePane()
+      pane = soldat.workspace.getActivePane()
       pane.splitRight()
       expect(workspaceElement.querySelectorAll('.tabs-mru-switcher').length).toBe initialPaneCount + 1
 
-      pane = atom.workspace.getActivePane()
+      pane = soldat.workspace.getActivePane()
       pane.splitDown()
       expect(workspaceElement.querySelectorAll('.tabs-mru-switcher').length).toBe initialPaneCount + 2
 
       waitsForPromise ->
-        pane = atom.workspace.getActivePane()
+        pane = soldat.workspace.getActivePane()
         Promise.resolve(pane.close())
 
       runs ->
         expect(workspaceElement.querySelectorAll('.tabs-mru-switcher').length).toBe initialPaneCount + 1
 
       waitsForPromise ->
-        pane = atom.workspace.getActivePane()
+        pane = soldat.workspace.getActivePane()
         Promise.resolve(pane.close())
 
       runs ->
@@ -47,8 +47,8 @@ describe 'MRU List', ->
       expect(workspaceElement.querySelectorAll('.tabs-mru-switcher li').length).toBe 0
 
     it "Doesn't activate when a single pane item is open", ->
-      pane = atom.workspace.getActivePane()
-      atom.commands.dispatch(pane, 'pane:show-next-recently-used-item')
+      pane = soldat.workspace.getActivePane()
+      soldat.commands.dispatch(pane, 'pane:show-next-recently-used-item')
       expect(workspaceElement.querySelectorAll('.tabs-mru-switcher li').length).toBe 0
 
   describe "contents", ->
@@ -56,89 +56,89 @@ describe 'MRU List', ->
 
     beforeEach ->
       waitsForPromise ->
-        atom.workspace.open("sample.png")
-      pane = atom.workspace.getActivePane()
+        soldat.workspace.open("sample.png")
+      pane = soldat.workspace.getActivePane()
 
     it "has one item per tab", ->
       if pane.onChooseNextMRUItem?
         expect(pane.getItems().length).toBe 2
-        atom.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
+        soldat.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
         expect(workspaceElement.querySelectorAll('.tabs-mru-switcher li').length).toBe 2
 
     it "switches between two items", ->
       firstActiveItem = pane.getActiveItem()
-      atom.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
+      soldat.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
       secondActiveItem = pane.getActiveItem()
       expect(secondActiveItem).toNotBe(firstActiveItem)
-      atom.commands.dispatch(workspaceElement, 'pane:move-active-item-to-top-of-stack')
+      soldat.commands.dispatch(workspaceElement, 'pane:move-active-item-to-top-of-stack')
       thirdActiveItem = pane.getActiveItem()
       expect(thirdActiveItem).toBe(secondActiveItem)
-      atom.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
-      atom.commands.dispatch(workspaceElement, 'pane:move-active-item-to-top-of-stack')
+      soldat.commands.dispatch(workspaceElement, 'pane:show-next-recently-used-item')
+      soldat.commands.dispatch(workspaceElement, 'pane:move-active-item-to-top-of-stack')
       fourthActiveItem = pane.getActiveItem()
       expect(fourthActiveItem).toBe(firstActiveItem)
 
   describe "config", ->
     configKey = 'tabs.enableMruTabSwitching'
-    dotAtomPath = null
+    dotSoldatPath = null
 
     beforeEach ->
-      dotAtomPath = temp.path('tabs-spec-mru-config')
-      atom.config.configDirPath = dotAtomPath
-      atom.config.configFilePath = path.join(atom.config.configDirPath, "atom.config.cson")
-      atom.keymaps.configDirPath = dotAtomPath
+      dotSoldatPath = temp.path('tabs-spec-mru-config')
+      soldat.config.configDirPath = dotSoldatPath
+      soldat.config.configFilePath = path.join(soldat.config.configDirPath, "soldat.config.cson")
+      soldat.keymaps.configDirPath = dotSoldatPath
 
     afterEach ->
-      fs.removeSync(dotAtomPath)
+      fs.removeSync(dotSoldatPath)
 
     it "defaults on", ->
-      expect(atom.config.get(configKey)).toBe(true)
+      expect(soldat.config.get(configKey)).toBe(true)
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-tab')
       expect(bindings.length).toBe(1)
       expect(bindings[0].command).toBe('pane:show-next-recently-used-item')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-tab ^ctrl')
       expect(bindings.length).toBe(1)
       expect(bindings[0].command).toBe('pane:move-active-item-to-top-of-stack')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-shift-tab')
       expect(bindings.length).toBe(1)
       expect(bindings[0].command).toBe('pane:show-previous-recently-used-item')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-shift-tab ^ctrl')
       expect(bindings.length).toBe(1)
       expect(bindings[0].command).toBe('pane:move-active-item-to-top-of-stack')
 
     it "alters keybindings when disabled", ->
-      atom.config.set(configKey, false)
-      bindings = atom.keymaps.findKeyBindings(
+      soldat.config.set(configKey, false)
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-tab')
       expect(bindings.length).toBe(2)
       expect(bindings[0].command).toBe('pane:show-next-item')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-tab ^ctrl')
       expect(bindings.length).toBe(2)
       expect(bindings[0].command).toBe('unset!')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-shift-tab')
       expect(bindings.length).toBe(2)
       expect(bindings[0].command).toBe('pane:show-previous-item')
 
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-shift-tab ^ctrl')
       expect(bindings.length).toBe(2)

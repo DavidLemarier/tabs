@@ -7,6 +7,6 @@
     "es6": true,
   },
   "globals" : {
-    "atom": false
+    "soldat": false
   }
 }

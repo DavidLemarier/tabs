@@ -5,16 +5,16 @@ describe 'file icon handling', ->
   workspaceElement = null
 
   beforeEach ->
-    workspaceElement = atom.workspace.getElement()
+    workspaceElement = soldat.workspace.getElement()
 
     waitsForPromise ->
-      atom.workspace.open('sample.js')
+      soldat.workspace.open('sample.js')
 
     waitsForPromise ->
-      atom.packages.activatePackage('tabs')
+      soldat.packages.activatePackage('tabs')
 
   it 'allows the service to provide icon classes', ->
-    fileIconsDisposable = atom.packages.serviceHub.provide 'atom.file-icons', '1.0.0', {
+    fileIconsDisposable = soldat.packages.serviceHub.provide 'soldat.file-icons', '1.0.0', {
       iconClassForPath: (path, context) ->
         expect(context).toBe('tabs')
         'first-icon-class second-icon-class'
@@ -27,7 +27,7 @@ describe 'file icon handling', ->
     expect(tab.itemTitle.className).toBe('title')
 
   it 'allows the service to provide multiple classes as an array', ->
-    atom.packages.serviceHub.provide 'atom.file-icons', '1.0.0', {
+    soldat.packages.serviceHub.provide 'soldat.file-icons', '1.0.0', {
       iconClassForPath: (path) -> ['first-icon-class', 'second-icon-class']
     }
 

@@ -1,7 +1,7 @@
 BrowserWindow = null # Defer require until actually used
 {ipcRenderer} = require 'electron'
 
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable} = require 'soldat'
 _ = require 'underscore-plus'
 TabView = require './tab-view'
 
@@ -12,7 +12,7 @@ class TabBarView
     @element.classList.add("list-inline")
     @element.classList.add("tab-bar")
     @element.classList.add("inset-panel")
-    @element.setAttribute('is', 'atom-tabs')
+    @element.setAttribute('is', 'soldat-tabs')
     @element.setAttribute("tabindex", -1)
     @element.setAttribute("location", @location)
 
@@ -20,7 +20,7 @@ class TabBarView
     @tabsByElement = new WeakMap
     @subscriptions = new CompositeDisposable
 
-    @subscriptions.add atom.commands.add @pane.getElement(),
+    @subscriptions.add soldat.commands.add @pane.getElement(),
       'tabs:keep-pending-tab': => @terminatePendingStates()
       'tabs:close-tab': => @closeTab(@getActiveTab())
       'tabs:close-other-tabs': => @closeOtherTabs(@getActiveTab())
@@ -39,7 +39,7 @@ class TabBarView
           event.stopPropagation()
           commands[name]()
 
-      @subscriptions.add(atom.commands.add(@element, commandsWithPropagationStopped))
+      @subscriptions.add(soldat.commands.add(@element, commandsWithPropagationStopped))
 
     addElementCommands
       'tabs:close-tab': => @closeTab()
@@ -79,9 +79,9 @@ class TabBarView
     @subscriptions.add @pane.onDidChangeActiveItem (item) =>
       @updateActiveTab()
 
-    @subscriptions.add atom.config.observe 'tabs.tabScrolling', @updateTabScrolling.bind(this)
-    @subscriptions.add atom.config.observe 'tabs.tabScrollingThreshold', => @updateTabScrollingThreshold()
-    @subscriptions.add atom.config.observe 'tabs.alwaysShowTabBar', => @updateTabBarVisibility()
+    @subscriptions.add soldat.config.observe 'tabs.tabScrolling', @updateTabScrolling.bind(this)
+    @subscriptions.add soldat.config.observe 'tabs.tabScrollingThreshold', => @updateTabScrollingThreshold()
+    @subscriptions.add soldat.config.observe 'tabs.alwaysShowTabBar', => @updateTabBarVisibility()
 
     @updateActiveTab()
 
@@ -114,7 +114,7 @@ class TabBarView
     tabView.terminatePendingState() if @isItemMovingBetweenPanes
     @tabsByElement.set(tabView.element, tabView)
     @insertTabAtIndex(tabView, index)
-    if atom.config.get('tabs.addNewTabsAtEnd')
+    if soldat.config.get('tabs.addNewTabsAtEnd')
       @pane.moveItem(item, @pane.getItems().length - 1) unless @isItemMovingBetweenPanes
 
   moveItemTabToIndex: (item, index) ->
@@ -148,7 +148,7 @@ class TabBarView
     @updateTabBarVisibility()
 
   updateTabBarVisibility: ->
-    if not atom.config.get('tabs.alwaysShowTabBar') and not @shouldAllowDrag()
+    if not soldat.config.get('tabs.alwaysShowTabBar') and not @shouldAllowDrag()
       @element.classList.add('hidden')
     else
       @element.classList.remove('hidden')
@@ -191,8 +191,8 @@ class TabBarView
       itemURI = item.getUri()
     return unless itemURI?
     @closeTab(tab)
-    pathsToOpen = [atom.project.getPaths(), itemURI].reduce ((a, b) -> a.concat(b)), []
-    atom.open({pathsToOpen: pathsToOpen, newWindow: true, devMode: atom.devMode, safeMode: atom.safeMode})
+    pathsToOpen = [soldat.project.getPaths(), itemURI].reduce ((a, b) -> a.concat(b)), []
+    soldat.open({pathsToOpen: pathsToOpen, newWindow: true, devMode: soldat.devMode, safeMode: soldat.safeMode})
 
   splitTab: (fn) ->
     if item = @rightClickedTab?.item
@@ -200,7 +200,7 @@ class TabBarView
         @pane[fn](items: [copiedItem])
 
   copyItem: (item) ->
-    item.copy?() ? atom.deserializers.deserialize(item.serialize())
+    item.copy?() ? soldat.deserializers.deserialize(item.serialize())
 
   closeOtherTabs: (active) ->
     tabs = @getTabs()
@@ -230,7 +230,7 @@ class TabBarView
     @closeTab(tab) for tab in @getTabs()
 
   getWindowId: ->
-    @windowId ?= atom.getCurrentWindow().id
+    @windowId ?= soldat.getCurrentWindow().id
 
   shouldAllowDrag: ->
     (@paneContainer.getPanes().length > 1) or (@pane.getItems().length > 1)
@@ -239,7 +239,7 @@ class TabBarView
     @draggedTab = @tabForElement(event.target)
     return unless @draggedTab
 
-    event.dataTransfer.setData 'atom-event', 'true'
+    event.dataTransfer.setData 'soldat-event', 'true'
 
     @draggedTab.element.classList.add('is-dragging')
     @draggedTab.destroyTooltip()
@@ -294,7 +294,7 @@ class TabBarView
     @clearDropTarget()
 
   onDragOver: (event) ->
-    unless isAtomEvent(event)
+    unless isSoldatEvent(event)
       event.preventDefault()
       event.stopPropagation()
       return
@@ -339,7 +339,7 @@ class TabBarView
   onDrop: (event) ->
     event.preventDefault()
 
-    return unless event.dataTransfer.getData('atom-event') is 'true'
+    return unless event.dataTransfer.getData('soldat-event') is 'true'
 
     fromWindowId  = parseInt(event.dataTransfer.getData('from-window-id'))
     fromPaneId    = parseInt(event.dataTransfer.getData('from-pane-id'))
@@ -361,17 +361,17 @@ class TabBarView
       if fromPane?.id isnt fromPaneId
         # If dragging from a different pane container, we have to be more
         # exhaustive in our search.
-        fromPane = Array.from document.querySelectorAll('atom-pane')
+        fromPane = Array.from document.querySelectorAll('soldat-pane')
           .map (paneEl) -> paneEl.model
           .find (pane) -> pane.id is fromPaneId
       item = fromPane.getItems()[fromIndex]
       @moveItemBetweenPanes(fromPane, fromIndex, toPane, toIndex, item) if item?
     else
       droppedURI = event.dataTransfer.getData('text/plain')
-      atom.workspace.open(droppedURI).then (item) =>
+      soldat.workspace.open(droppedURI).then (item) =>
         # Move the item from the pane it was opened on to the target pane
         # where it was dropped onto
-        activePane = atom.workspace.getActivePane()
+        activePane = soldat.workspace.getActivePane()
         activeItemIndex = activePane.getItems().indexOf(item)
         @moveItemBetweenPanes(activePane, activeItemIndex, toPane, toIndex, item)
         item.setText?(modifiedText) if hasUnsavedChanges
@@ -381,7 +381,7 @@ class TabBarView
           browserWindow = @browserWindowForId(fromWindowId)
           browserWindow?.webContents.send('tab:dropped', fromPaneId, fromIndex)
 
-      atom.focus()
+      soldat.focus()
 
   onMouseWheel: (event) ->
     return if event.shiftKey
@@ -425,18 +425,18 @@ class TabBarView
     if tab = @tabForElement(event.target)
       tab.item.terminatePendingState?()
     else if event.target is @element
-      atom.commands.dispatch(@element, 'application:new-file')
+      soldat.commands.dispatch(@element, 'application:new-file')
       event.preventDefault()
 
   updateTabScrollingThreshold: ->
-    @tabScrollingThreshold = atom.config.get('tabs.tabScrollingThreshold')
+    @tabScrollingThreshold = soldat.config.get('tabs.tabScrollingThreshold')
 
   updateTabScrolling: (value) ->
     if value is 'platform'
       @tabScrolling = (process.platform is 'linux')
     else
       @tabScrolling = value
-    @tabScrollingThreshold = atom.config.get('tabs.tabScrollingThreshold')
+    @tabScrollingThreshold = soldat.config.get('tabs.tabScrollingThreshold')
 
     if @tabScrolling
       @element.addEventListener 'mousewheel', @onMouseWheel.bind(this)
@@ -462,7 +462,7 @@ class TabBarView
       @isItemMovingBetweenPanes = false
 
   removeDropTargetClasses: ->
-    workspaceElement = atom.workspace.getElement()
+    workspaceElement = soldat.workspace.getElement()
     for dropTarget in workspaceElement.querySelectorAll('.tab-bar .is-drop-target')
       dropTarget.classList.remove('is-drop-target')
 
@@ -521,9 +521,9 @@ class TabBarView
       else
         currentElement = currentElement.parentElement
 
-isAtomEvent = (event) ->
+isSoldatEvent = (event) ->
   for item in event.dataTransfer.items
-    if item.type is 'atom-event'
+    if item.type is 'soldat-event'
       return true
 
   return false

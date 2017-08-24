@@ -1,4 +1,4 @@
-{CompositeDisposable, Disposable} = require 'atom'
+{CompositeDisposable, Disposable} = require 'soldat'
 FileIcons = require './file-icons'
 layout = require './layout'
 TabBarView = require './tab-bar-view'
@@ -17,17 +17,17 @@ module.exports =
 
     @updateTraversalKeybinds = ->
       # We don't modify keybindings based on our setting if the user has already tweaked them.
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-tab')
       return if bindings.length > 1 and bindings[0].source isnt keyBindSource
-      bindings = atom.keymaps.findKeyBindings(
+      bindings = soldat.keymaps.findKeyBindings(
         target: document.body,
         keystrokes: 'ctrl-shift-tab')
       return if bindings.length > 1 and bindings[0].source isnt keyBindSource
 
-      if atom.config.get(configKey)
-        atom.keymaps.removeBindingsFromSource(keyBindSource)
+      if soldat.config.get(configKey)
+        soldat.keymaps.removeBindingsFromSource(keyBindSource)
       else
         disabledBindings =
           'body':
@@ -35,14 +35,14 @@ module.exports =
             'ctrl-tab ^ctrl': 'unset!'
             'ctrl-shift-tab': 'pane:show-previous-item'
             'ctrl-shift-tab ^ctrl': 'unset!'
-        atom.keymaps.add(keyBindSource, disabledBindings, 0)
+        soldat.keymaps.add(keyBindSource, disabledBindings, 0)
 
-    @subscriptions.add atom.config.observe configKey, => @updateTraversalKeybinds()
-    @subscriptions.add atom.keymaps.onDidLoadUserKeymap? => @updateTraversalKeybinds()
+    @subscriptions.add soldat.config.observe configKey, => @updateTraversalKeybinds()
+    @subscriptions.add soldat.keymaps.onDidLoadUserKeymap? => @updateTraversalKeybinds()
 
     # If the command bubbles up without being handled by a particular pane,
     # close all tabs in all panes
-    @subscriptions.add atom.commands.add 'atom-workspace',
+    @subscriptions.add soldat.commands.add 'soldat-workspace',
       'tabs:close-all-tabs': =>
         # We loop backwards because the panes are
         # removed from the array as we go
@@ -50,10 +50,10 @@ module.exports =
           tabBarView.closeAllTabs()
 
     paneContainers =
-      center: atom.workspace.getCenter?() ? atom.workspace
-      left: atom.workspace.getLeftDock?()
-      right: atom.workspace.getRightDock?()
-      bottom: atom.workspace.getBottomDock?()
+      center: soldat.workspace.getCenter?() ? soldat.workspace
+      left: soldat.workspace.getLeftDock?()
+      right: soldat.workspace.getRightDock?()
+      bottom: soldat.workspace.getBottomDock?()
 
     Object.keys(paneContainers).forEach (location) =>
       container = paneContainers[location]

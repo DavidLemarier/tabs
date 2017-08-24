@@ -1,5 +1,5 @@
 # Tabs package
-[![OS X Build Status](https://travis-ci.org/atom/tabs.svg?branch=master)](https://travis-ci.org/atom/tabs) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/nf4hdmuk4i9xkfmb/branch/master?svg=true)](https://ci.appveyor.com/project/Atom/tabs/branch/master) [![Dependency Status](https://david-dm.org/atom/tabs.svg)](https://david-dm.org/atom/tabs)
+[![OS X Build Status](https://travis-ci.org/soldat/tabs.svg?branch=master)](https://travis-ci.org/soldat/tabs) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/nf4hdmuk4i9xkfmb/branch/master?svg=true)](https://ci.appveyor.com/project/Soldat/tabs/branch/master) [![Dependency Status](https://david-dm.org/soldat/tabs.svg)](https://david-dm.org/soldat/tabs)
 
 Display selectable tabs above the editor.
 
@@ -7,8 +7,8 @@ Display selectable tabs above the editor.
 
 ## API
 
-Tabs can display icons next to file names. These icons are customizable by installing a package that provides an `atom.file-icons` service.
+Tabs can display icons next to file names. These icons are customizable by installing a package that provides an `soldat.file-icons` service.
 
-The `atom.file-icons` service must provide the following methods:
+The `soldat.file-icons` service must provide the following methods:
 
 * `iconClassForPath(path)` - Returns a CSS class name to add to the tab view

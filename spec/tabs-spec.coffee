@@ -16,8 +16,8 @@ addItemToPane = (pane, item, index) ->
   else
     throw new Error("Unspoorted pane.addItem API")
 
-# TODO: Remove this after atom/atom#13977 lands in favor of unguarded `getCenter()` calls
-getCenter = -> atom.workspace.getCenter?() ? atom.workspace
+# TODO: Remove this after soldat/soldat#13977 lands in favor of unguarded `getCenter()` calls
+getCenter = -> soldat.workspace.getCenter?() ? soldat.workspace
 
 describe "Tabs package main", ->
   centerElement = null
@@ -26,17 +26,17 @@ describe "Tabs package main", ->
     centerElement = getCenter().paneContainer.getElement()
 
     waitsForPromise ->
-      atom.workspace.open('sample.js')
+      soldat.workspace.open('sample.js')
 
     waitsForPromise ->
-      atom.packages.activatePackage("tabs")
+      soldat.packages.activatePackage("tabs")
 
   describe ".activate()", ->
     it "appends a tab bar all existing and new panes", ->
       expect(centerElement.querySelectorAll('.pane').length).toBe 1
       expect(centerElement.querySelectorAll('.pane > .tab-bar').length).toBe 1
 
-      pane = atom.workspace.getActivePane()
+      pane = soldat.workspace.getActivePane()
       pane.splitRight()
 
       expect(centerElement.querySelectorAll('.pane').length).toBe 2
@@ -46,12 +46,12 @@ describe "Tabs package main", ->
 
   describe ".deactivate()", ->
     it "removes all tab bar views and stops adding them to new panes", ->
-      pane = atom.workspace.getActivePane()
+      pane = soldat.workspace.getActivePane()
       pane.splitRight()
       expect(centerElement.querySelectorAll('.pane').length).toBe 2
       expect(centerElement.querySelectorAll('.pane > .tab-bar').length).toBe 2
 
-      atom.packages.deactivatePackage('tabs')
+      soldat.packages.deactivatePackage('tabs')
       expect(centerElement.querySelectorAll('.pane').length).toBe 2
       expect(centerElement.querySelectorAll('.pane > .tab-bar').length).toBe 0
 
@@ -92,16 +92,16 @@ describe "TabBarView", ->
       dispose: ->
 
   beforeEach ->
-    deserializerDisposable = atom.deserializers.add(TestView)
+    deserializerDisposable = soldat.deserializers.add(TestView)
     item1 = new TestView('Item 1', undefined, "squirrel", "sample.js")
     item2 = new TestView('Item 2')
 
     waitsForPromise ->
-      atom.workspace.open('sample.js')
+      soldat.workspace.open('sample.js')
 
     runs ->
-      editor1 = atom.workspace.getActiveTextEditor()
-      pane = atom.workspace.getActivePane()
+      editor1 = soldat.workspace.getActiveTextEditor()
+      pane = soldat.workspace.getActivePane()
       addItemToPane(pane, item1, 0)
       addItemToPane(pane, item2, 2)
       pane.activateItem(item2)
@@ -204,10 +204,10 @@ describe "TabBarView", ->
       editor2 = null
 
       waitsForPromise ->
-        if atom.workspace.createItemForURI?
-          atom.workspace.createItemForURI('sample.txt').then (o) -> editor2 = o
+        if soldat.workspace.createItemForURI?
+          soldat.workspace.createItemForURI('sample.txt').then (o) -> editor2 = o
         else
-          atom.workspace.open('sample.txt', {activateItem: false}).then (o) -> editor2 = o
+          soldat.workspace.open('sample.txt', {activateItem: false}).then (o) -> editor2 = o
 
       runs ->
         editor2.insertText('x')
@@ -216,14 +216,14 @@ describe "TabBarView", ->
 
     describe "when addNewTabsAtEnd is set to true in package settings", ->
       it "adds a tab for the new item at the end of the tab bar", ->
-        atom.config.set("tabs.addNewTabsAtEnd", true)
+        soldat.config.set("tabs.addNewTabsAtEnd", true)
         item3 = new TestView('Item 3')
         pane.activateItem(item3)
         expect(tabBar.element.querySelectorAll('.tab').length).toBe 4
         expect(tabBar.tabAtIndex(3).element.querySelector('.title').textContent).toMatch 'Item 3'
 
       it "puts the new tab at the last index of the pane's items", ->
-        atom.config.set("tabs.addNewTabsAtEnd", true)
+        soldat.config.set("tabs.addNewTabsAtEnd", true)
         item3 = new TestView('Item 3')
         # activate item1 so default is to add immediately after
         pane.activateItem(item1)
@@ -232,7 +232,7 @@ describe "TabBarView", ->
 
     describe "when addNewTabsAtEnd is set to false in package settings", ->
       it "adds a tab for the new item at the same index as the item in the pane", ->
-        atom.config.set("tabs.addNewTabsAtEnd", false)
+        soldat.config.set("tabs.addNewTabsAtEnd", false)
         pane.activateItem(item1)
         item3 = new TestView('Item 3')
         pane.activateItem(item3)
@@ -258,7 +258,7 @@ describe "TabBarView", ->
 
   describe "when a tab is clicked", ->
     it "shows the associated item on the pane and focuses the pane", ->
-      jasmine.attachToDOM(tabBar.element) # Remove after Atom 1.2.0 is released
+      jasmine.attachToDOM(tabBar.element) # Remove after Soldat 1.2.0 is released
       spyOn(pane, 'activate')
 
       {mousedown, click} = triggerClickEvent(tabBar.tabAtIndex(0).element, which: 1)
@@ -275,7 +275,7 @@ describe "TabBarView", ->
       expect(pane.activate.callCount).toBe 2
 
     it "closes the tab when middle clicked", ->
-      jasmine.attachToDOM(tabBar.element) # Remove after Atom 1.2.0 is released
+      jasmine.attachToDOM(tabBar.element) # Remove after Soldat 1.2.0 is released
 
       {click} = triggerClickEvent(tabBar.tabForItem(editor1).element, which: 2)
 
@@ -288,7 +288,7 @@ describe "TabBarView", ->
       expect(click.preventDefault).toHaveBeenCalled()
 
     it "doesn't switch tab when right (or ctrl-left) clicked", ->
-      jasmine.attachToDOM(tabBar.element) # Remove after Atom 1.2.0 is released
+      jasmine.attachToDOM(tabBar.element) # Remove after Soldat 1.2.0 is released
 
       spyOn(pane, 'activate')
 
@@ -304,7 +304,7 @@ describe "TabBarView", ->
 
   describe "when a tab's close icon is clicked", ->
     it "destroys the tab's item on the pane", ->
-      jasmine.attachToDOM(tabBar.element) # Remove after Atom 1.2.0 is released
+      jasmine.attachToDOM(tabBar.element) # Remove after Soldat 1.2.0 is released
 
       tabBar.tabForItem(editor1).element.querySelector('.close-icon').click()
       expect(pane.getItems().length).toBe 2
@@ -394,10 +394,10 @@ describe "TabBarView", ->
       expect(tabs[3].querySelector('.close-icon')).not.toEqual(null)
       expect(tabs[4].querySelector('.close-icon')).not.toEqual(null)
 
-    return unless atom.workspace.getRightDock?
+    return unless soldat.workspace.getRightDock?
     describe "in docks", ->
       beforeEach ->
-        pane = atom.workspace.getRightDock().getActivePane()
+        pane = soldat.workspace.getRightDock().getActivePane()
         tabBar = new TabBarView(pane, 'right')
 
       it "isn't shown if the method returns true", ->
@@ -442,7 +442,7 @@ describe "TabBarView", ->
       beforeEach ->
         spyOn(tabBar.tabForItem(item1), 'updateIconVisibility').andCallThrough()
 
-        atom.config.set("tabs.showIcons", true)
+        soldat.config.set("tabs.showIcons", true)
 
         waitsFor ->
           tabBar.tabForItem(item1).updateIconVisibility.callCount > 0
@@ -454,7 +454,7 @@ describe "TabBarView", ->
         expect(tabBar.element.querySelectorAll('.tab')[0].querySelector('.title')).not.toHaveClass "hide-icon"
 
       it "hides the icon from the tab when showIcon is changed to false", ->
-        atom.config.set("tabs.showIcons", false)
+        soldat.config.set("tabs.showIcons", false)
 
         waitsFor ->
           tabBar.tabForItem(item1).updateIconVisibility.callCount > 0
@@ -466,7 +466,7 @@ describe "TabBarView", ->
       beforeEach ->
         spyOn(tabBar.tabForItem(item1), 'updateIconVisibility').andCallThrough()
 
-        atom.config.set("tabs.showIcons", false)
+        soldat.config.set("tabs.showIcons", false)
 
         waitsFor ->
           tabBar.tabForItem(item1).updateIconVisibility.callCount > 0
@@ -478,7 +478,7 @@ describe "TabBarView", ->
         expect(tabBar.element.querySelectorAll('.tab')[0].querySelector('.title')).toHaveClass "hide-icon"
 
       it "shows the icon on the tab when showIcon is changed to true", ->
-        atom.config.set("tabs.showIcons", true)
+        soldat.config.set("tabs.showIcons", true)
 
         waitsFor ->
           tabBar.tabForItem(item1).updateIconVisibility.callCount > 0
@@ -516,7 +516,7 @@ describe "TabBarView", ->
     # behavior is independent of addNewTabs config
     describe "when addNewTabsAtEnd is set to true in package settings", ->
       it "updates the order of the tabs to match the new item order", ->
-        atom.config.set("tabs.addNewTabsAtEnd", true)
+        soldat.config.set("tabs.addNewTabsAtEnd", true)
         expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js", "Item 2"]
         pane.moveItem(item2, 1)
         expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "Item 2", "sample.js"]
@@ -527,7 +527,7 @@ describe "TabBarView", ->
 
     describe "when addNewTabsAtEnd is set to false in package settings", ->
       it "updates the order of the tabs to match the new item order", ->
-        atom.config.set("tabs.addNewTabsAtEnd", false)
+        soldat.config.set("tabs.addNewTabsAtEnd", false)
         expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js", "Item 2"]
         pane.moveItem(item2, 1)
         expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "Item 2", "sample.js"]
@@ -544,7 +544,7 @@ describe "TabBarView", ->
     describe "when tabs:close-tab is fired", ->
       it "closes the active tab", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
-        atom.commands.dispatch(tabBar.element, 'tabs:close-tab')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-tab')
         expect(pane.getItems().length).toBe 2
         expect(pane.getItems().indexOf(item2)).toBe -1
         expect(tabBar.getTabs().length).toBe 2
@@ -553,7 +553,7 @@ describe "TabBarView", ->
     describe "when tabs:close-other-tabs is fired", ->
       it "closes all other tabs except the active tab", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
-        atom.commands.dispatch(tabBar.element, 'tabs:close-other-tabs')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-other-tabs')
         expect(pane.getItems().length).toBe 1
         expect(tabBar.getTabs().length).toBe 1
         expect(tabBar.element.textContent).not.toMatch('sample.js')
@@ -563,7 +563,7 @@ describe "TabBarView", ->
       it "closes only the tabs to the right of the active tab", ->
         pane.activateItem(editor1)
         triggerClickEvent(tabBar.tabForItem(editor1).element, which: 3)
-        atom.commands.dispatch(tabBar.element, 'tabs:close-tabs-to-right')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-tabs-to-right')
         expect(pane.getItems().length).toBe 2
         expect(tabBar.getTabs().length).toBe 2
         expect(tabBar.element.textContent).not.toMatch('Item 2')
@@ -573,7 +573,7 @@ describe "TabBarView", ->
       it "closes only the tabs to the left of the active tab", ->
         pane.activateItem(editor1)
         triggerClickEvent(tabBar.tabForItem(editor1).element, which: 3)
-        atom.commands.dispatch(tabBar.element, 'tabs:close-tabs-to-left')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-tabs-to-left')
         expect(pane.getItems().length).toBe 2
         expect(tabBar.getTabs().length).toBe 2
         expect(tabBar.element.textContent).toMatch('Item 2')
@@ -582,13 +582,13 @@ describe "TabBarView", ->
     describe "when tabs:close-all-tabs is fired", ->
       it "closes all the tabs", ->
         expect(pane.getItems().length).toBeGreaterThan 0
-        atom.commands.dispatch(tabBar.element, 'tabs:close-all-tabs')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-all-tabs')
         expect(pane.getItems().length).toBe 0
 
     describe "when tabs:close-saved-tabs is fired", ->
       it "closes all the saved tabs", ->
         item1.isModified = -> true
-        atom.commands.dispatch(tabBar.element, 'tabs:close-saved-tabs')
+        soldat.commands.dispatch(tabBar.element, 'tabs:close-saved-tabs')
         expect(pane.getItems().length).toBe 1
         expect(pane.getItems()[0]).toBe item1
 
@@ -597,7 +597,7 @@ describe "TabBarView", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
         expect(getCenter().getPanes().length).toBe 1
 
-        atom.commands.dispatch(tabBar.element, 'tabs:split-up')
+        soldat.commands.dispatch(tabBar.element, 'tabs:split-up')
         expect(getCenter().getPanes().length).toBe 2
         expect(getCenter().getPanes()[1]).toBe pane
         expect(getCenter().getPanes()[0].getItems()[0].getTitle()).toBe item2.getTitle()
@@ -607,7 +607,7 @@ describe "TabBarView", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
         expect(getCenter().getPanes().length).toBe 1
 
-        atom.commands.dispatch(tabBar.element, 'tabs:split-down')
+        soldat.commands.dispatch(tabBar.element, 'tabs:split-down')
         expect(getCenter().getPanes().length).toBe 2
         expect(getCenter().getPanes()[0]).toBe pane
         expect(getCenter().getPanes()[1].getItems()[0].getTitle()).toBe item2.getTitle()
@@ -617,7 +617,7 @@ describe "TabBarView", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
         expect(getCenter().getPanes().length).toBe 1
 
-        atom.commands.dispatch(tabBar.element, 'tabs:split-left')
+        soldat.commands.dispatch(tabBar.element, 'tabs:split-left')
         expect(getCenter().getPanes().length).toBe 2
         expect(getCenter().getPanes()[1]).toBe pane
         expect(getCenter().getPanes()[0].getItems()[0].getTitle()).toBe item2.getTitle()
@@ -627,7 +627,7 @@ describe "TabBarView", ->
         triggerClickEvent(tabBar.tabForItem(item2).element, which: 3)
         expect(getCenter().getPanes().length).toBe 1
 
-        atom.commands.dispatch(tabBar.element, 'tabs:split-right')
+        soldat.commands.dispatch(tabBar.element, 'tabs:split-right')
         expect(getCenter().getPanes().length).toBe 2
         expect(getCenter().getPanes()[0]).toBe pane
         expect(getCenter().getPanes()[1].getItems()[0].getTitle()).toBe item2.getTitle()
@@ -639,9 +639,9 @@ describe "TabBarView", ->
           expect(getCenter().getPanes().length).toBe 1
 
         it "opens new window, closes current tab", ->
-          spyOn(atom, 'open')
-          atom.commands.dispatch(tabBar.element, 'tabs:open-in-new-window')
-          expect(atom.open).toHaveBeenCalled()
+          spyOn(soldat, 'open')
+          soldat.commands.dispatch(tabBar.element, 'tabs:open-in-new-window')
+          expect(soldat.open).toHaveBeenCalled()
 
           expect(pane.getItems().length).toBe 2
           expect(tabBar.getTabs().length).toBe 2
@@ -652,9 +652,9 @@ describe "TabBarView", ->
         # See #309 for background
 
         it "does nothing", ->
-          spyOn(atom, 'open')
-          atom.commands.dispatch(tabBar.element, 'tabs:open-in-new-window')
-          expect(atom.open).not.toHaveBeenCalled()
+          spyOn(soldat, 'open')
+          soldat.commands.dispatch(tabBar.element, 'tabs:open-in-new-window')
+          expect(soldat.open).not.toHaveBeenCalled()
 
   describe "command palette commands", ->
     paneElement = null
@@ -664,22 +664,22 @@ describe "TabBarView", ->
 
     describe "when tabs:close-tab is fired", ->
       it "closes the active tab", ->
-        atom.commands.dispatch(paneElement, 'tabs:close-tab')
+        soldat.commands.dispatch(paneElement, 'tabs:close-tab')
         expect(pane.getItems().length).toBe 2
         expect(pane.getItems().indexOf(item2)).toBe -1
         expect(tabBar.getTabs().length).toBe 2
         expect(tabBar.element.textContent).not.toMatch('Item 2')
 
       it "does nothing if no tabs are open", ->
-        atom.commands.dispatch(paneElement, 'tabs:close-tab')
-        atom.commands.dispatch(paneElement, 'tabs:close-tab')
-        atom.commands.dispatch(paneElement, 'tabs:close-tab')
+        soldat.commands.dispatch(paneElement, 'tabs:close-tab')
+        soldat.commands.dispatch(paneElement, 'tabs:close-tab')
+        soldat.commands.dispatch(paneElement, 'tabs:close-tab')
         expect(pane.getItems().length).toBe 0
         expect(tabBar.getTabs().length).toBe 0
 
     describe "when tabs:close-other-tabs is fired", ->
       it "closes all other tabs except the active tab", ->
-        atom.commands.dispatch(paneElement, 'tabs:close-other-tabs')
+        soldat.commands.dispatch(paneElement, 'tabs:close-other-tabs')
         expect(pane.getItems().length).toBe 1
         expect(tabBar.getTabs().length).toBe 1
         expect(tabBar.element.textContent).not.toMatch('sample.js')
@@ -688,7 +688,7 @@ describe "TabBarView", ->
     describe "when tabs:close-tabs-to-right is fired", ->
       it "closes only the tabs to the right of the active tab", ->
         pane.activateItem(editor1)
-        atom.commands.dispatch(paneElement, 'tabs:close-tabs-to-right')
+        soldat.commands.dispatch(paneElement, 'tabs:close-tabs-to-right')
         expect(pane.getItems().length).toBe 2
         expect(tabBar.getTabs().length).toBe 2
         expect(tabBar.element.textContent).not.toMatch('Item 2')
@@ -697,13 +697,13 @@ describe "TabBarView", ->
     describe "when tabs:close-all-tabs is fired", ->
       it "closes all the tabs", ->
         expect(pane.getItems().length).toBeGreaterThan 0
-        atom.commands.dispatch(paneElement, 'tabs:close-all-tabs')
+        soldat.commands.dispatch(paneElement, 'tabs:close-all-tabs')
         expect(pane.getItems().length).toBe 0
 
     describe "when tabs:close-saved-tabs is fired", ->
       it "closes all the saved tabs", ->
         item1.isModified = -> true
-        atom.commands.dispatch(paneElement, 'tabs:close-saved-tabs')
+        soldat.commands.dispatch(paneElement, 'tabs:close-saved-tabs')
         expect(pane.getItems().length).toBe 1
         expect(pane.getItems()[0]).toBe item1
 
@@ -850,7 +850,7 @@ describe "TabBarView", ->
 
       describe "when addNewTabsAtEnd is set to true in package settings", ->
         it "moves the dragged tab to the desired index in the new pane", ->
-          atom.config.set("tabs.addNewTabsAtEnd", true)
+          soldat.config.set("tabs.addNewTabsAtEnd", true)
           expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js", "Item 2"]
           expect(pane.getItems()).toEqual [item1, editor1, item2]
           expect(pane.getActiveItem()).toBe item2
@@ -868,7 +868,7 @@ describe "TabBarView", ->
           expect(pane.getItems()).toEqual [item1, item2b, editor1, item2]
           expect(pane.getActiveItem()).toBe item2b
 
-          atom.config.set("tabs.addNewTabsAtEnd", false)
+          soldat.config.set("tabs.addNewTabsAtEnd", false)
 
     describe "when a tab is dragged over a pane item", ->
       it "draws an overlay over the item", ->
@@ -902,7 +902,7 @@ describe "TabBarView", ->
         tab.ondragend target: tab, clientX: 80, clientY: 50
         expect(getCenter().getPanes().length).toEqual(2)
         expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js"]
-        expect(atom.workspace.getActivePane().getItems().length).toEqual(1)
+        expect(soldat.workspace.getActivePane().getItems().length).toEqual(1)
 
       describe "when the dragged tab is the only one in the pane", ->
         it "does nothing", ->
@@ -935,7 +935,7 @@ describe "TabBarView", ->
           tab.ondragend target: tab, clientX: 80, clientY: 50
           expect(getCenter().getPanes().length).toEqual(2)
           expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js"]
-          expect(atom.workspace.getActivePane().getItems().length).toEqual(1)
+          expect(soldat.workspace.getActivePane().getItems().length).toEqual(1)
 
     describe "when a non-tab is dragged to pane", ->
       it "has no effect", ->
@@ -961,7 +961,7 @@ describe "TabBarView", ->
         if process.platform is 'darwin'
           expect(dragStartEvent.dataTransfer.getData("text/uri-list")).toEqual "file://#{editor1.getPath()}"
 
-    describe "when a tab is dragged to another Atom window", ->
+    describe "when a tab is dragged to another Soldat window", ->
       it "closes the tab in the first window and opens the tab in the second window", ->
         [dragStartEvent, dropEvent] = buildDragEvents(tabBar.tabAtIndex(1).element, tabBar.tabAtIndex(0).element)
         tabBar.onDragStart(dragStartEvent)
@@ -979,7 +979,7 @@ describe "TabBarView", ->
           tabBar.moveItemBetweenPanes.callCount > 0
 
         runs ->
-          editor = atom.workspace.getActiveTextEditor()
+          editor = soldat.workspace.getActiveTextEditor()
           expect(editor.getPath()).toBe editor1.getPath()
           expect(pane.getItems()).toEqual [item1, editor, item2]
 
@@ -998,7 +998,7 @@ describe "TabBarView", ->
           tabBar.moveItemBetweenPanes.callCount > 0
 
         runs ->
-          expect(atom.workspace.getActiveTextEditor().getText()).toBe 'I came from another window'
+          expect(soldat.workspace.getActiveTextEditor().getText()).toBe 'I came from another window'
 
       it "allows untitled editors to be moved between windows", ->
         editor1.getBuffer().setPath(null)
@@ -1017,23 +1017,23 @@ describe "TabBarView", ->
           tabBar.moveItemBetweenPanes.callCount > 0
 
         runs ->
-          expect(atom.workspace.getActiveTextEditor().getText()).toBe 'I have no path'
-          expect(atom.workspace.getActiveTextEditor().getPath()).toBeUndefined()
+          expect(soldat.workspace.getActiveTextEditor().getText()).toBe 'I have no path'
+          expect(soldat.workspace.getActiveTextEditor().getPath()).toBeUndefined()
 
-    if atom.workspace.getLeftDock?
+    if soldat.workspace.getLeftDock?
       describe "when a tab is dragged to another pane container", ->
         [pane2, tabBar2, dockItem] = []
 
         beforeEach ->
-          jasmine.attachToDOM(atom.workspace.getElement())
-          pane = atom.workspace.getActivePane()
-          pane2 = atom.workspace.getLeftDock().getActivePane()
+          jasmine.attachToDOM(soldat.workspace.getElement())
+          pane = soldat.workspace.getActivePane()
+          pane2 = soldat.workspace.getLeftDock().getActivePane()
           dockItem = new TestView('Dock Item')
           pane2.addItem(dockItem)
           tabBar2 = new TabBarView(pane2, 'left')
 
         it "removes the tab and item from their original pane and moves them to the target pane", ->
-          expect(atom.workspace.getLeftDock().isVisible()).toBe(false)
+          expect(soldat.workspace.getLeftDock().isVisible()).toBe(false)
 
           expect(tabBar.getTabs().map (tab) -> tab.element.textContent).toEqual ["Item 1", "sample.js", "Item 2"]
           expect(pane.getItems()).toEqual [item1, editor1, item2]
@@ -1058,7 +1058,7 @@ describe "TabBarView", ->
           expect(tabBar2.getTabs().map (tab) -> tab.element.textContent).toEqual ["Dock Item", "Item 1"]
           expect(pane2.getItems()).toEqual [dockItem, item1]
           expect(pane2.activeItem).toBe item1
-          expect(atom.workspace.getLeftDock().isVisible()).toBe(true)
+          expect(soldat.workspace.getLeftDock().isVisible()).toBe(true)
 
         it "shows a placeholder and allows the tab be dropped only if the item supports the target pane container location", ->
           item1.getAllowedLocations = -> ['center', 'bottom']
@@ -1086,7 +1086,7 @@ describe "TabBarView", ->
   describe "when the tab bar is double clicked", ->
     it "opens a new empty editor", ->
       newFileHandler = jasmine.createSpy('newFileHandler')
-      atom.commands.add(tabBar.element, 'application:new-file', newFileHandler)
+      soldat.commands.add(tabBar.element, 'application:new-file', newFileHandler)
 
       triggerMouseEvent("dblclick", tabBar.getTabs()[0].element)
       expect(newFileHandler.callCount).toBe 0
@@ -1097,8 +1097,8 @@ describe "TabBarView", ->
   describe "when the mouse wheel is used on the tab bar", ->
     describe "when tabScrolling is true in package settings", ->
       beforeEach ->
-        atom.config.set("tabs.tabScrolling", true)
-        atom.config.set("tabs.tabScrollingThreshold", 120)
+        soldat.config.set("tabs.tabScrolling", true)
+        soldat.config.set("tabs.tabScrollingThreshold", 120)
 
       describe "when the mouse wheel scrolls up", ->
         it "changes the active tab to the previous tab", ->
@@ -1135,7 +1135,7 @@ describe "TabBarView", ->
 
     describe "when tabScrolling is false in package settings", ->
       beforeEach ->
-        atom.config.set("tabs.tabScrolling", false)
+        soldat.config.set("tabs.tabScrolling", false)
 
       describe "when the mouse wheel scrolls up one unit", ->
         it "does not change the active tab", ->
@@ -1151,7 +1151,7 @@ describe "TabBarView", ->
 
   describe "when alwaysShowTabBar is true in package settings", ->
     beforeEach ->
-      atom.config.set("tabs.alwaysShowTabBar", true)
+      soldat.config.set("tabs.alwaysShowTabBar", true)
 
     describe "when 2 tabs are open", ->
       it "shows the tab bar", ->
@@ -1168,7 +1168,7 @@ describe "TabBarView", ->
 
   describe "when alwaysShowTabBar is false in package settings", ->
     beforeEach ->
-      atom.config.set("tabs.alwaysShowTabBar", false)
+      soldat.config.set("tabs.alwaysShowTabBar", false)
 
     describe "when 2 tabs are open", ->
       it "shows the tab bar", ->
@@ -1183,12 +1183,12 @@ describe "TabBarView", ->
         expect(pane.getItems().length).toBe 1
         expect(tabBar.element).toHaveClass 'hidden'
 
-  if atom.workspace.buildTextEditor().isPending? or atom.workspace.getActivePane().getActiveItem?
+  if soldat.workspace.buildTextEditor().isPending? or soldat.workspace.getActivePane().getActiveItem?
     isPending = (item) ->
       if item.isPending?
         item.isPending()
       else
-        atom.workspace.getActivePane().getPendingItem() is item
+        soldat.workspace.getActivePane().getPendingItem() is item
 
     describe "when tab's pane item is pending", ->
       beforeEach ->
@@ -1198,7 +1198,7 @@ describe "TabBarView", ->
         it "adds tab with class 'temp'", ->
           editor1 = null
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
+            soldat.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
 
           runs ->
             pane.activateItem(editor1)
@@ -1209,12 +1209,12 @@ describe "TabBarView", ->
         it "terminates pending state on the tab's item", ->
           editor1 = null
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
+            soldat.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
 
           runs ->
             pane.activateItem(editor1)
             expect(isPending(editor1)).toBe true
-            atom.commands.dispatch(atom.workspace.getActivePane().getElement(), 'tabs:keep-pending-tab')
+            soldat.commands.dispatch(soldat.workspace.getActivePane().getElement(), 'tabs:keep-pending-tab')
             expect(isPending(editor1)).toBe false
 
       describe "when there is a temp tab already", ->
@@ -1223,9 +1223,9 @@ describe "TabBarView", ->
           editor2 = null
 
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) ->
+            soldat.workspace.open('sample.txt', pending: true).then (o) ->
               editor1 = o
-              atom.workspace.open('sample2.txt', pending: true).then (o) ->
+              soldat.workspace.open('sample2.txt', pending: true).then (o) ->
                 editor2 = o
 
           runs ->
@@ -1237,7 +1237,7 @@ describe "TabBarView", ->
           editor2 = null
 
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) -> editor2 = o
+            soldat.workspace.open('sample.txt', pending: true).then (o) -> editor2 = o
 
           runs ->
             pane.activateItem(editor2)
@@ -1249,7 +1249,7 @@ describe "TabBarView", ->
         it "makes the item and tab permanent", ->
           editor1 = null
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) ->
+            soldat.workspace.open('sample.txt', pending: true).then (o) ->
               editor1 = o
               pane.activateItem(editor1)
               editor1.insertText('x')
@@ -1262,7 +1262,7 @@ describe "TabBarView", ->
         it "makes the tab permanent", ->
           editor1 = null
           waitsForPromise ->
-            atom.workspace.open(path.join(temp.mkdirSync('tabs-'), 'sample.txt'), pending: true).then (o) ->
+            soldat.workspace.open(path.join(temp.mkdirSync('tabs-'), 'sample.txt'), pending: true).then (o) ->
               editor1 = o
               pane.activateItem(editor1)
               editor1.save()
@@ -1274,7 +1274,7 @@ describe "TabBarView", ->
         editor1 = null
         beforeEach ->
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
+            soldat.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
 
         it "makes the tab permanent in the new pane", ->
           pane.activateItem(editor1)
@@ -1292,7 +1292,7 @@ describe "TabBarView", ->
         it "makes the tab permanent in the other pane", ->
           editor1 = null
           waitsForPromise ->
-            atom.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
+            soldat.workspace.open('sample.txt', pending: true).then (o) -> editor1 = o
 
           runs ->
             pane.activateItem(editor1)
@@ -1334,10 +1334,10 @@ describe "TabBarView", ->
       repository.emitDidChangeStatuses = (event) ->
         callback(event) for callback in @changeStatusesCallbacks ? []
 
-      # Mock atom.project to pretend we are working within a repository
-      spyOn(atom.project, 'repositoryForDirectory').andReturn Promise.resolve(repository)
+      # Mock soldat.project to pretend we are working within a repository
+      spyOn(soldat.project, 'repositoryForDirectory').andReturn Promise.resolve(repository)
 
-      atom.config.set "tabs.enableVcsColoring", true
+      soldat.config.set "tabs.enableVcsColoring", true
 
       waitsFor ->
         repository.changeStatusCallbacks?.length > 0
@@ -1397,14 +1397,14 @@ describe "TabBarView", ->
         repository.emitDidChangeStatus {path: tab.path, pathStatus: 'new'}
 
         expect(tabBar.element.querySelectorAll('.tab')[1].querySelector('.title')).toHaveClass "status-added"
-        atom.config.set "tabs.enableVcsColoring", false
+        soldat.config.set "tabs.enableVcsColoring", false
         expect(tabBar.element.querySelectorAll('.tab')[1].querySelector('.title')).not.toHaveClass "status-added"
 
       it "adds status to the tab if enableVcsColoring is set to true", ->
-        atom.config.set "tabs.enableVcsColoring", false
+        soldat.config.set "tabs.enableVcsColoring", false
         repository.getCachedPathStatus.andReturn 'modified'
         expect(tabBar.element.querySelectorAll('.tab')[1].querySelector('.title')).not.toHaveClass "status-modified"
-        atom.config.set "tabs.enableVcsColoring", true
+        soldat.config.set "tabs.enableVcsColoring", true
 
         waitsFor ->
           repository.changeStatusCallbacks?.length > 0
@@ -1412,12 +1412,12 @@ describe "TabBarView", ->
         runs ->
           expect(tabBar.element.querySelectorAll('.tab')[1].querySelector('.title')).toHaveClass "status-modified"
 
-    if atom.workspace.getLeftDock?
+    if soldat.workspace.getLeftDock?
       describe "a pane in the dock", ->
         beforeEach -> main.activate()
         afterEach -> main.deactivate()
         it "gets decorated with tabs", ->
-          dock = atom.workspace.getLeftDock()
+          dock = soldat.workspace.getLeftDock()
           dockElement = dock.getElement()
           item = new TestView('Dock Item 1')
           expect(dockElement.querySelectorAll('.tab').length).toBe(0)

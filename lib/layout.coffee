@@ -1,7 +1,7 @@
 module.exports =
   activate: ->
     @view = document.createElement 'div'
-    atom.workspace.getElement().appendChild @view
+    soldat.workspace.getElement().appendChild @view
     @view.classList.add 'tabs-layout-overlay'
 
   deactivate: ->
@@ -48,7 +48,7 @@ module.exports =
     @test.itemView or @getElement coords, '.item-views'
 
   getPaneAt: (coords) ->
-    @test.pane or @getElement(@lastCoords, 'atom-pane')?.getModel()
+    @test.pane or @getElement(@lastCoords, 'soldat-pane')?.getModel()
 
   isOnlyTabInPane: (pane, tab) ->
     pane.getItems().length is 1 and pane is tab.pane

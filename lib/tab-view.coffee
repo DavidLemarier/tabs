@@ -1,5 +1,5 @@
 path = require 'path'
-{Disposable, CompositeDisposable} = require 'atom'
+{Disposable, CompositeDisposable} = require 'soldat'
 FileIcons = require './file-icons'
 
 layout = require './layout'
@@ -129,16 +129,16 @@ class TabView
         @terminatePendingState()
         if event.path isnt @path
           @path = event.path
-          @setupVcsStatus() if atom.config.get 'tabs.enableVcsColoring'
+          @setupVcsStatus() if soldat.config.get 'tabs.enableVcsColoring'
 
       if Disposable.isDisposable(onDidSaveDisposable)
         @subscriptions.add(onDidSaveDisposable)
       else
         console.warn "::onDidSave does not return a valid Disposable!", @item
-    @subscriptions.add atom.config.observe 'tabs.showIcons', =>
+    @subscriptions.add soldat.config.observe 'tabs.showIcons', =>
       @updateIconVisibility()
 
-    @subscriptions.add atom.config.observe 'tabs.enableVcsColoring', (isEnabled) =>
+    @subscriptions.add soldat.config.observe 'tabs.enableVcsColoring', (isEnabled) =>
       if isEnabled and @path? then @setupVcsStatus() else @unsetVcsStatus()
 
   setupTooltip: ->
@@ -163,7 +163,7 @@ class TabView
     @destroyTooltip()
 
     if @path
-      @tooltip = atom.tooltips.add @element,
+      @tooltip = soldat.tooltips.add @element,
         title: @path
         html: false
         delay:
@@ -246,7 +246,7 @@ class TabView
     @element.classList.remove('pending-tab')
 
   updateIconVisibility: ->
-    if atom.config.get 'tabs.showIcons'
+    if soldat.config.get 'tabs.showIcons'
       @itemTitle.classList.remove('hide-icon')
     else
       @itemTitle.classList.add('hide-icon')
@@ -279,8 +279,8 @@ class TabView
       @updateVcsStatus(repo)
 
   repoForPath: ->
-    for dir in atom.project.getDirectories()
-      return atom.project.repositoryForDirectory(dir) if dir.contains @path
+    for dir in soldat.project.getDirectories()
+      return soldat.project.repositoryForDirectory(dir) if dir.contains @path
     Promise.resolve(null)
 
   # Update the VCS status property of this tab using the repo.
@@ -303,7 +303,7 @@ class TabView
 
   updateVcsColoring: ->
     @itemTitle.classList.remove('status-ignored', 'status-modified',  'status-added')
-    if @status and atom.config.get 'tabs.enableVcsColoring'
+    if @status and soldat.config.get 'tabs.enableVcsColoring'
       @itemTitle.classList.add("status-#{@status}")
 
   unsetVcsStatus: ->
